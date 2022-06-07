@@ -15,15 +15,16 @@ UNDER_RIDGE_RADIUS = HOLE_RADIUS + (OUTER_RADIUS - HOLE_RADIUS) * 0.66;
 
 
 SCREW_HOLE_OFFSET = HOLE_RADIUS + (OUTER_RADIUS - HOLE_RADIUS) * 0.25;
-SCREW_HOLE_RADIUS = 1.5;
+SCREW_HOLE_RADIUS = 2;
 SCREW_HOLE_BEVEL_RADIUS = 3.5;
 SCREW_HOLE_SUPPORT_RADIUS = 4;
-
 
 LIP_SIZE = 1.9;
 
 MAIN_RADIUS = OUTER_RADIUS - LIP_SIZE;
 MAIN_CIRCUMFERANCE = MAIN_RADIUS * 2 * PI;
+
+
 
 OUTER_RIDGE_SIZE = 4.5;
 
@@ -32,10 +33,18 @@ RIDGE_SIZE = 1.7;
 FIRST_RIDGE_RADIUS = HOLE_RADIUS;
 LAST_RIDGE_RADIUS = MAIN_RADIUS - OUTER_RIDGE_SIZE; 
 
-RIDGE_COUNT = 6;
+RIDGE_COUNT = 5;
 RIDGE_SPACE = (LAST_RIDGE_RADIUS - FIRST_RIDGE_RADIUS) / (RIDGE_COUNT - 1);
 
 INNER_RIDGE_RADIUS = HOLE_RADIUS + RIDGE_SIZE;
+
+UPPER_ARROW_OFFSET = SCREW_HOLE_OFFSET + SCREW_HOLE_SUPPORT_RADIUS;
+LOWER_ARROW_OFFSET = SCREW_HOLE_OFFSET + SCREW_HOLE_BEVEL_RADIUS;
+ARROW_WIDTH = SCREW_HOLE_SUPPORT_RADIUS / 3 * 2;
+UPPER_ARROW_DEPTH = LAST_RIDGE_RADIUS - UPPER_ARROW_OFFSET;
+LOWER_ARROW_DEPTH = UNDER_RIDGE_RADIUS - LOWER_ARROW_OFFSET;
+
+
 
 
 THICKNESS = 3.9;
@@ -56,12 +65,6 @@ CUTOUT_WIDTH = 20;
 CUTOUT_CORNER_RADIUS = 3;
 CUTOUT_DEPTH = LIP_SIZE * 2;
 CUTOUT_ANGLE_OFFSET = STOPPER_ANGLE_OFFSET - CUTOUT_WIDTH / 2 / MAIN_CIRCUMFERANCE * 360;
-
-
-
-echo("circumferance", MAIN_CIRCUMFERANCE);
-echo("stopper angle", STOPPER_ANGLE_OFFSET);
-echo("cutout angle", CUTOUT_ANGLE_OFFSET);
 
 
 $fn = 90;
@@ -116,6 +119,10 @@ module nest_protect_mount_plate() {
                 }
             }
             
+            // Arrow
+            translate([-ARROW_WIDTH / 2, UPPER_ARROW_OFFSET, LIP_THICKNESS + BASE_THICKNESS]) arrow(ARROW_WIDTH, UPPER_ARROW_DEPTH, RIDGE_THICKNESS);
+
+            
             // stopper
             for (angle = [0:120:240]) rotate([0, 0, angle - STOPPER_ANGLE_OFFSET ] ) {
                 translate([STOPPER_WIDTH / 2, MAIN_RADIUS, 0]) color("orange") cube([STOPPER_WIDTH, STOPPER_DEPTH, STOPPER_HEIGHT]);
@@ -136,6 +143,9 @@ module nest_protect_mount_plate() {
                     
                 }
             }
+
+            // Arrow
+            translate([-ARROW_WIDTH / 2, LOWER_ARROW_OFFSET, 0]) arrow(ARROW_WIDTH, LOWER_ARROW_DEPTH, RIDGE_THICKNESS);
             
             // Screw holes
             for (angle = [0:90:270]) rotate([0, 0, angle]) {
@@ -181,4 +191,17 @@ module rounded_cube(width, depth, height, corner_radius) {
             }
         }
     }
+}
+
+
+module arrow(width, depth, height, point_width = 0, point_depth = 0) {
+    point_width = point_width == 0 ? width + width * 2 / 3 : point_width;
+    point_depth = point_depth == 0 ? width  : point_depth;
+    
+    rect_depth = depth - point_depth;
+        
+    linear_extrude(height) polygon(
+        points = [[0, 0], [width, 0], [width, rect_depth], [width / 2 + point_width /2, rect_depth], [width / 2, depth], [width/2 - point_width /2, rect_depth], [0, rect_depth]],
+        paths = [[0, 1, 2, 3, 4, 5, 6]]
+    );
 }
